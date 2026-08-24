@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Secuencia de Memoria - Howie</title>
+  <!-- Confeti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+      touch-action: none;
+    }
+    body {
+      background: linear-gradient(135deg, #004A97 0%, #002244 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      color: #fff;
+      overflow: hidden;
+      padding: 6px 10px;
+    }
+
+    /* Marcador Superior Compacto */
+    #header {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      z-index: 5;
+      margin-bottom: 2px;
+    }
+    .badge {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    #timer-badge {
+      background: #F57C00;
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    #instruccion {
+      font-size: 13px;
+      font-weight: bold;
+      color: #f1c40f;
+      text-align: center;
+      margin-bottom: 6px;
+      min-height: 18px;
+    }
+
+    /* Contenedor Principal Adaptativo */
+    #area-juego {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 600px;
+      flex: 1;
+      justify-content: flex-start;
+    }
+
+    @media (orientation: landscape) {
+      body {
+        padding: 4px 10px;
+      }
+      #header {
+        max-width: 700px;
+        margin-bottom: 2px;
+      }
+      #instruccion {
+        margin-bottom: 4px;
+      }
+      #area-juego {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        max-width: 750px;
+        gap: 16px;
+      }
+    }
+
+    /* Área Central de Slots */
+    #zona-central {
+      display: grid;
+      gap: 6px;
+      justify-content: center;
+      align-content: center;
+    }
+
+    .grid-2x2 { grid-template-columns: repeat(2, 64px); grid-template-rows: repeat(2, 86px); }
+    .grid-3x2 { grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(2, 82px); }
+    .grid-4x2 { grid-template-columns: repeat(4, 54px); grid-template-rows: repeat(2, 76px); }
+
+    .slot {
+      width: 100%;
+      height: 100%;
+      border: 2px dashed rgba(255, 255, 255, 0.45);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.06);
+      position: relative;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .slot.hovered {
+      background: rgba(245, 124, 0, 0.35);
+      border-color: #F57C00;
+      border-style: solid;
+    }
+    .slot-num {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.35);
+      font-weight: bold;
+      pointer-events: none;
+    }
+
+    /* Área de Banco de Cartas */
+    #zona-dispersion {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      max-width: 320px;
+      min-height: 85px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+    }
+
+    /* Tarjeta */
+    .tarjeta {
+      width: 100%;
+      height: 100%;
+      border-radius: 9px;
+      position: relative;
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      border: 2px solid #004A97;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+      touch-action: none;
+      overflow: hidden;
+      padding: 3px;
+    }
+    .grid-2x2 .tarjeta, #zona-dispersion.lvl-0 .tarjeta { width: 64px; height: 86px; }
+    .grid-3x2 .tarjeta, #zona-dispersion.lvl-1 .tarjeta { width: 60px; height: 82px; }
+    .grid-4x2 .tarjeta, #zona-dispersion.lvl-2 .tarjeta { width: 54px; height: 76px; }
+
+    .tarjeta img {
+      width: 80%;
+      height: 70%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    .tarjeta .nombre {
+      font-size: 9px;
+      font-weight: bold;
+      color: #333;
+      pointer-events: none;
+      text-transform: capitalize;
+    }
+    .tarjeta.dragging {
+      opacity: 0.9;
+      cursor: grabbing;
+      z-index: 1000 !important;
+      pointer-events: none !important;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Feedback de Validación con Tilde o Cruz */
+    .overlay-validacion {
+      position: absolute;
+      inset: -2px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: bold;
+      z-index: 10;
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .val-correcto {
+      background: rgba(46, 204, 113, 0.75);
+      color: #ffffff;
+      border: 2px solid #2ecc71;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+    .val-incorrecto {
+      background: rgba(231, 76, 60, 0.75);
+      color: #ffffff;
+      border: 2px solid #e74c3c;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Modales / Overlays 100% Opacos */
+    .pantalla-overlay {
+      position: fixed;
+      inset: 0;
+      background: #002244;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      z-index: 2000;
+      gap: 12px;
+    }
+    .oculto { display: none !important; }
+
+    h1 { font-size: 22px; color: #fff; }
+    p { font-size: 13px; color: #ddd; max-width: 300px; line-height: 1.3; }
+
+    .btn {
+      background: #F57C00;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(245, 124, 0, 0.4);
+      margin-top: 6px;
+    }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-link-inicio {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #aaa;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .card-premio {
+      background: #004A97;
+      border: 3px dashed #F57C00;
+      padding: 14px;
+      border-radius: 14px;
+      margin: 6px 0;
+      max-width: 280px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Marcador -->
+  <div id="header">
+    <div class="badge" id="nivel-badge">Nivel 1 / 3</div>
+    <div class="badge" id="timer-badge">⏱️ 10s</div>
+  </div>
+
+  <div id="instruccion">¡Memorizá el orden de los Howies!</div>
+
+  <!-- Contenedor adaptativo -->
+  <div id="area-juego">
+    <div id="zona-central"></div>
+    <div id="zona-dispersion"></div>
+  </div>
+
+  <!-- 1. PANTALLA INICIO -->
+  <div id="pantalla-inicio" class="pantalla-overlay">
+    <h1>🦉 Memoria de Howies</h1>
+    <p>Memorizá el orden de los colores durante <b>10 segundos</b>. Luego tenés <b>20 segundos</b> para acomodarlos en su lugar original.</p>
+    <button class="btn" onclick="iniciarNivel(0)">Comenzar juego</button>
+  </div>
+
+  <!-- 2. PANTALLA NIVEL SUPERADO -->
+  <div id="pantalla-nivel-superado" class="pantalla-overlay oculto">
+    <h1 style="color: #2ecc71;">¡Excelente! 🎉</h1>
+    <p>¡Ordenaste a los Howies correctamente!</p>
+    <button class="btn" onclick="pasarSiguienteNivel()">Siguiente nivel</button>
+  </div>
+
+  <!-- 3. PANTALLA CASI / ERROR -->
+  <div id="pantalla-casi" class="pantalla-overlay oculto">
+    <h1 style="color: #e74c3c;">Haaa... ¡casi! 🙈</h1>
+    <p id="texto-casi">El orden no era el correcto. ¡Volvé a intentarlo!</p>
+    <button class="btn" onclick="reintentarNivel()">Volver a intentar</button>
+    <span class="btn-link-inicio" onclick="irAlInicio()">Ir al inicio</span>
+  </div>
+
+  <!-- 4. PANTALLA FINAL GANASTE -->
+  <div id="pantalla-final" class="pantalla-overlay oculto">
+    <h1 style="color: #2ecc71;">¡COMPLETASTE TODO! 🏆</h1>
+    <div class="card-premio">
+      <h2 style="color: #f1c40f; font-size: 18px; margin-bottom: 6px;">🎁 ¡PREMIO DESBLOQUEADO!</h2>
+      <p style="color: #fff; font-size: 13px;">Reclamá tu premio en el stand mostrando esta pantalla.</p>
+    </div>
+    <button class="btn" onclick="irAlInicio()">Ir al inicio</button>
+  </div>
+
+  <script>
+    // Pool con las 8 imágenes de Howie
+    const elementosPool = [
+      { id: 'amarillo', nombre: 'Amarillo', img: 'img/amarillo.jpg' },
+      { id: 'azul', nombre: 'Azul', img: 'img/azul.jpg' },
+      { id: 'blanco', nombre: 'Blanco', img: 'img/blanco.jpg' },
+      { id: 'lila', nombre: 'Lila', img: 'img/lila.jpg' },
+      { id: 'marron', nombre: 'Marrón', img: 'img/marron.jpg' },
+      { id: 'negro', nombre: 'Negro', img: 'img/negro.jpg' },
+      { id: 'rosa', nombre: 'Rosa', img: 'img/rosa.jpg' },
+      { id: 'verde', nombre: 'Verde', img: 'img/verde.jpg' }
+    ];
+
+    const configNiveles = [
+      { nivel: 1, cantidad: 4, gridClase: 'grid-2x2' },
+      { nivel: 2, cantidad: 6, gridClase: 'grid-3x2' },
+      { nivel: 3, cantidad: 8, gridClase: 'grid-4x2' }
+    ];
+
+    let nivelActualIndex = 0;
+    let secuenciaOriginal = [];
+    let tiempoRestante = 10;
+    let timerInterval = null;
+
+    let dragActivo = false;
+    let tarjetaSeleccionada = null;
+    let slotOrigen = null;
+    let slotDestinoDetectado = null;
+    let dragCardWidth = 0, dragCardHeight = 0;
+
+    // Precarga de imágenes para evitar demoras
+    window.cacheHowies = [];
+    elementosPool.forEach(item => {
+      const img = new Image();
+      img.src = item.img;
+      window.cacheHowies.push(img);
+    });
+
+    function irAlInicio() {
+      clearInterval(timerInterval);
+      document.querySelectorAll('.pantalla-overlay').forEach(p => p.classList.add('oculto'));
+      document.getElementById('pantalla-inicio').classList.remove('oculto');
+    }
+
+    function reintentarNivel() {
+      iniciarNivel(nivelActualIndex);
+    }
+
+    function pasarSiguienteNivel() {
+      nivelActualIndex++;
+      iniciarNivel(nivelActualIndex);
+    }
+
+    function iniciarNivel(index) {
+      nivelActualIndex = index;
+      document.querySelectorAll('.pantalla-overlay').forEach(p => p.classList.add('oculto'));
+      clearInterval(timerInterval);
+
+      const config = configNiveles[nivelActualIndex];
+      document.getElementById('nivel-badge').innerText = `Nivel ${nivelActualIndex + 1} / 3`;
+      document.getElementById('instruccion').innerText = '¡Memorizá el orden de los Howies!';
+
+      const barajados = [...elementosPool].sort(() => Math.random() - 0.5);
+      secuenciaOriginal = barajados.slice(0, config.cantidad);
+
+      prepararFaseMemorizacion(config);
+    }
+
+    function prepararFaseMemorizacion(config) {
+      const zonaCentral = document.getElementById('zona-central');
+      const zonaDispersion = document.getElementById('zona-dispersion');
+      zonaCentral.className = config.gridClase;
+      zonaCentral.innerHTML = '';
+      zonaDispersion.innerHTML = '';
+      zonaDispersion.className = `lvl-${nivelActualIndex}`;
+
+      tiempoRestante = 10;
+      document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
+
+      secuenciaOriginal.forEach((item, i) => {
+        const slot = crearSlot(i);
+        const card = crearTarjeta(item);
+        slot.appendChild(card);
+        zonaCentral.appendChild(slot);
+      });
+
+      timerInterval = setInterval(() => {
+        tiempoRestante--;
+        document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
+        if (tiempoRestante <= 0) {
+          clearInterval(timerInterval);
+          ejecutarFaseDispersion();
+        }
+      }, 1000);
+    }
+
+    function ejecutarFaseDispersion() {
+      tiempoRestante = 20;
+      document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
+      document.getElementById('instruccion').innerText = 'Arrastrá cada Howie a su casilla original';
+
+      const zonaCentral = document.getElementById('zona-central');
+      const zonaDispersion = document.getElementById('zona-dispersion');
+
+      const tarjetas = Array.from(zonaCentral.querySelectorAll('.tarjeta'));
+      tarjetas.sort(() => Math.random() - 0.5);
+
+      tarjetas.forEach(card => {
+        habilitarDrag(card);
+        zonaDispersion.appendChild(card);
+      });
+
+      timerInterval = setInterval(() => {
+        tiempoRestante--;
+        document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
+        if (tiempoRestante <= 0) {
+          clearInterval(timerInterval);
+          document.querySelectorAll('.tarjeta').forEach(c => c.onpointerdown = null);
+          document.getElementById('texto-casi').innerText = '¡Se acabó el tiempo! Estuviste muy cerca.';
+          document.getElementById('pantalla-casi').classList.remove('oculto');
+        }
+      }, 1000);
+    }
+
+    function crearSlot(index) {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.dataset.slotIndex = index;
+      slot.innerHTML = `<span class="slot-num">${index + 1}</span>`;
+      return slot;
+    }
+
+    function crearTarjeta(item) {
+      const card = document.createElement('div');
+      card.className = 'tarjeta';
+      card.dataset.id = item.id;
+      card.innerHTML = `
+        <img src="${item.img}" alt="Howie ${item.nombre}">
+        <div class="nombre">${item.nombre}</div>
+      `;
+      return card;
+    }
+
+    function habilitarDrag(card) {
+      card.onpointerdown = (e) => {
+        if (dragActivo) return;
+        dragActivo = true;
+        tarjetaSeleccionada = card;
+        slotOrigen = card.parentElement;
+        slotDestinoDetectado = null;
+
+        const rect = card.getBoundingClientRect();
+        dragCardWidth = rect.width;
+        dragCardHeight = rect.height;
+
+        card.style.width = dragCardWidth + 'px';
+        card.style.height = dragCardHeight + 'px';
+        card.style.position = 'fixed';
+        card.style.left = (e.clientX - dragCardWidth / 2) + 'px';
+        card.style.top = (e.clientY - dragCardHeight / 2) + 'px';
+        card.classList.add('dragging');
+        document.body.appendChild(card);
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+      };
+    }
+
+    function onPointerMove(e) {
+      if (!dragActivo || !tarjetaSeleccionada) return;
+      tarjetaSeleccionada.style.left = (e.clientX - dragCardWidth / 2) + 'px';
+      tarjetaSeleccionada.style.top = (e.clientY - dragCardHeight / 2) + 'px';
+
+      document.querySelectorAll('.slot').forEach(s => s.classList.remove('hovered'));
+      slotDestinoDetectado = buscarSlotMasCercano(e.clientX, e.clientY);
+
+      if (slotDestinoDetectado) {
+        slotDestinoDetectado.classList.add('hovered');
+      }
+    }
+
+    function onPointerUp(e) {
+      if (!dragActivo) return;
+      dragActivo = false;
+
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+
+      document.querySelectorAll('.slot').forEach(s => s.classList.remove('hovered'));
+
+      tarjetaSeleccionada.classList.remove('dragging');
+      tarjetaSeleccionada.style.position = 'relative';
+      tarjetaSeleccionada.style.left = '0px';
+      tarjetaSeleccionada.style.top = '0px';
+      tarjetaSeleccionada.style.width = '';
+      tarjetaSeleccionada.style.height = '';
+
+      const enZonaDispersion = estaSobreElemento(document.getElementById('zona-dispersion'), e.clientX, e.clientY);
+
+      if (slotDestinoDetectado && !slotDestinoDetectado.querySelector('.tarjeta')) {
+        slotDestinoDetectado.appendChild(tarjetaSeleccionada);
+      } else if (enZonaDispersion) {
+        document.getElementById('zona-dispersion').appendChild(tarjetaSeleccionada);
+      } else {
+        slotOrigen.appendChild(tarjetaSeleccionada);
+      }
+
+      tarjetaSeleccionada = null;
+      slotOrigen = null;
+      slotDestinoDetectado = null;
+
+      comprobarSiCompleto();
+    }
+
+    function buscarSlotMasCercano(x, y) {
+      const slots = document.querySelectorAll('#zona-central .slot');
+      let mejorSlot = null;
+      let menorDistancia = Infinity;
+
+      slots.forEach(slot => {
+        if (slot.querySelector('.tarjeta')) return;
+        const rect = slot.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dist = Math.hypot(x - centerX, y - centerY);
+
+        if (dist < 50 && dist < menorDistancia) {
+          menorDistancia = dist;
+          mejorSlot = slot;
+        }
+      });
+      return mejorSlot;
+    }
+
+    function estaSobreElemento(elem, x, y) {
+      if (!elem) return false;
+      const rect = elem.getBoundingClientRect();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    function comprobarSiCompleto() {
+      const slots = document.querySelectorAll('#zona-central .slot');
+      let llenos = 0;
+      slots.forEach(slot => {
+        if (slot.querySelector('.tarjeta')) llenos++;
+      });
+
+      if (llenos === secuenciaOriginal.length) {
+        clearInterval(timerInterval);
+        validarResultadoSecuencial(slots);
+      }
+    }
+
+    function validarResultadoSecuencial(slots) {
+      document.querySelectorAll('.tarjeta').forEach(c => c.onpointerdown = null);
+
+      let todosCorrectos = true;
+      let index = 0;
+
+      function validarSiguiente() {
+        if (index < slots.length) {
+          const slot = slots[index];
+          const card = slot.querySelector('.tarjeta');
+          const esCorrecto = card.dataset.id === secuenciaOriginal[index].id;
+
+          const overlay = document.createElement('div');
+          overlay.className = `overlay-validacion ${esCorrecto ? 'val-correcto' : 'val-incorrecto'}`;
+          overlay.innerText = esCorrecto ? '✔' : '✖';
+          card.appendChild(overlay);
+
+          if (!esCorrecto) todosCorrectos = false;
+
+          index++;
+          setTimeout(validarSiguiente, 300);
+        } else {
+          setTimeout(() => {
+            if (todosCorrectos) {
+              confetti({ particleCount: 90, spread: 65, origin: { y: 0.6 } });
+              if (nivelActualIndex === configNiveles.length - 1) {
+                document.getElementById('pantalla-final').classList.remove('oculto');
+              } else {
+                document.getElementById('pantalla-nivel-superado').classList.remove('oculto');
+              }
+            } else {
+              document.getElementById('texto-casi').innerText = 'El orden no era el correcto. ¡Volvé a intentarlo!';
+              document.getElementById('pantalla-casi').classList.remove('oculto');
+            }
+          }, 1000);
+        }
+      }
+
+      validarSiguiente();
+    }
+  </script>
+</body>
+</html>
