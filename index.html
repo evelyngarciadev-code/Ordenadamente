@@ -64,7 +64,7 @@
       flex-shrink: 0;
     }
 
-    /* Contenedor Principal Adaptativo */
+    /* Contenedor Adaptativo */
     #area-juego {
       display: flex;
       flex-direction: column;
@@ -76,7 +76,6 @@
       gap: 8px;
     }
 
-    /* Layout en Horizontal (Landscape) */
     @media (orientation: landscape) {
       body {
         padding: 4px 12px;
@@ -108,26 +107,24 @@
       align-content: center;
     }
 
-    /* Dimensiones en Vertical (Portrait) */
+    /* Vertical (Portrait) */
     @media (orientation: portrait) {
       .grid-2x2 { grid-template-columns: repeat(2, 28vmin); grid-template-rows: repeat(2, 38vmin); }
       .grid-3x2 { grid-template-columns: repeat(3, 23vmin); grid-template-rows: repeat(2, 32vmin); }
-      .grid-4x2 { grid-template-columns: repeat(4, 18vmin); grid-template-rows: repeat(2, 26vmin); }
 
       #zona-dispersion.lvl-0 .tarjeta { width: 28vmin; height: 38vmin; }
       #zona-dispersion.lvl-1 .tarjeta { width: 23vmin; height: 32vmin; }
-      #zona-dispersion.lvl-2 .tarjeta { width: 18vmin; height: 26vmin; }
+      #zona-dispersion.lvl-2 .tarjeta { width: 23vmin; height: 32vmin; }
     }
 
-    /* Dimensiones en Horizontal (Landscape) */
+    /* Horizontal (Landscape) */
     @media (orientation: landscape) {
       .grid-2x2 { grid-template-columns: repeat(2, 17vmin); grid-template-rows: repeat(2, 24vmin); }
       .grid-3x2 { grid-template-columns: repeat(3, 15vmin); grid-template-rows: repeat(2, 21vmin); }
-      .grid-4x2 { grid-template-columns: repeat(4, 13vmin); grid-template-rows: repeat(2, 19vmin); }
 
       #zona-dispersion.lvl-0 .tarjeta { width: 17vmin; height: 24vmin; }
       #zona-dispersion.lvl-1 .tarjeta { width: 15vmin; height: 21vmin; }
-      #zona-dispersion.lvl-2 .tarjeta { width: 13vmin; height: 19vmin; }
+      #zona-dispersion.lvl-2 .tarjeta { width: 15vmin; height: 21vmin; }
     }
 
     .slot {
@@ -172,7 +169,7 @@
       border-radius: 14px;
     }
 
-    /* Tarjeta y Howie */
+    /* Tarjetas */
     .tarjeta {
       width: 100%;
       height: 100%;
@@ -303,7 +300,7 @@
     <div class="badge" id="timer-badge">⏱️ 10s</div>
   </div>
 
-  <div id="instruccion">¡Memorizá el orden de los Howies!</div>
+  <div id="instruccion">¡Memorizá el orden de las tarjetas!</div>
 
   <!-- Contenedor adaptativo -->
   <div id="area-juego">
@@ -314,23 +311,38 @@
   <!-- 1. PANTALLA INICIO -->
   <div id="pantalla-inicio" class="pantalla-overlay">
     <h1>🦉 Ordenadamente - Howie</h1>
-    <p>Memorizá el orden durante <b>10 segundos</b>. Luego tenés <b>20 segundos</b> para acomodar a los Howies en su lugar original[cite: 1].</p>
+    <p>Memorizá el orden de las tarjetas antes de que acabe el tiempo. Luego acomodalas en su casillero original.</p>
     <button class="btn" onclick="iniciarNivel(0)">Comenzar juego</button>
   </div>
 
   <!-- 2. PANTALLA NIVEL SUPERADO -->
   <div id="pantalla-nivel-superado" class="pantalla-overlay oculto">
     <h1 style="color: #2ecc71;">¡Excelente! 🎉</h1>
-    <p>¡Ordenaste a los Howies correctamente!</p>
-    <button class="btn" onclick="pasarSiguienteNivel()">Siguiente nivel</button>
+    <p>¡Ordenaste las tarjetas correctamente!</p>
+    <button class="btn" onclick="avanzarDesdeNivelSuperado()">Siguiente nivel</button>
+  </div>
+
+  <!-- NUEVA: PANTALLA ADVERTENCIA NIVEL 3 -->
+  <div id="pantalla-advertencia-n3" class="pantalla-overlay oculto">
+    <h1 style="color: #f1c40f;">⚠️ ¡Atención!</h1>
+    <p style="font-size: 15px; color: #fff;">Ahora hay <b>menos tiempo</b> para memorizar...</p>
+    <p style="font-size: 13px; color: #f57c00; font-weight: bold;">¡Tenés solo 6 segundos!</p>
+    <button class="btn" onclick="iniciarNivel(2)">¡Entendido, jugar!</button>
   </div>
 
   <!-- 3. PANTALLA CASI / ERROR -->
   <div id="pantalla-casi" class="pantalla-overlay oculto">
     <h1 style="color: #e74c3c;">Haaa... ¡casi! 🙈</h1>
-    <p id="texto-casi">El orden no era el correcto. ¡Volvé a intentarlo!</p>
-    <button class="btn" onclick="reintentarNivel()">Volver a intentar</button>
-    <span class="btn-link-inicio" onclick="irAlInicio()">Ir al inicio</span>
+    <p id="texto-casi">El orden no era el correcto.</p>
+    
+    <!-- Botón condicional para nivel 3 -->
+    <button id="btn-reintentar" class="btn oculto" onclick="reintentarNivel()">Volver a intentar</button>
+    
+    <!-- Botón condicional para niveles 1 y 2 -->
+    <button id="btn-inicio-principal" class="btn" onclick="irAlInicio()">Volver al inicio</button>
+    
+    <!-- Link inferior visible solo en nivel 3 -->
+    <span id="link-inicio-secundario" class="btn-link-inicio oculto" onclick="irAlInicio()">Ir al inicio</span>
   </div>
 
   <!-- 4. PANTALLA FINAL GANASTE -->
@@ -338,27 +350,27 @@
     <h1 style="color: #2ecc71;">¡COMPLETASTE TODO! 🏆</h1>
     <div class="card-premio">
       <h2 style="color: #f1c40f; font-size: 18px; margin-bottom: 6px;">🎁 ¡PREMIO DESBLOQUEADO!</h2>
-      <p style="color: #fff; font-size: 13px;">Reclamá tu premio en el stand mostrando esta pantalla[cite: 1].</p>
+      <p style="color: #fff; font-size: 13px;">Reclamá tu premio en el stand mostrando esta pantalla.</p>
     </div>
     <button class="btn" onclick="irAlInicio()">Ir al inicio</button>
   </div>
 
   <script>
     const elementosPool = [
-      { id: 'amarillo', nombre: 'Amarillo', img: 'img/amarillo.jpg' },
-      { id: 'azul', nombre: 'Azul', img: 'img/azul.jpg' },
-      { id: 'blanco', nombre: 'Blanco', img: 'img/blanco.jpg' },
-      { id: 'lila', nombre: 'Lila', img: 'img/lila.jpg' },
-      { id: 'marron', nombre: 'Marrón', img: 'img/marron.jpg' },
-      { id: 'negro', nombre: 'Negro', img: 'img/negro.jpg' },
-      { id: 'rosa', nombre: 'Rosa', img: 'img/rosa.jpg' },
-      { id: 'verde', nombre: 'Verde', img: 'img/verde.jpg' }
+      { id: 'pile', nombre: 'Pile', img: 'img/pile.jpg' },
+      { id: 'arco', nombre: 'Arco', img: 'img/arco.jpg' },
+      { id: 'bici', nombre: 'Bici', img: 'img/bici.jpg' },
+      { id: 'aqua', nombre: 'Aqua', img: 'img/aqua.jpg' },
+      { id: 'kayak', nombre: 'Kayak', img: 'img/kayak.jpg' },
+      { id: 'spa', nombre: 'Spa', img: 'img/spa.jpg' },
+      { id: 'resto', nombre: 'Restó', img: 'img/resto.jpg' },
+      { id: 'arte', nombre: 'Arte', img: 'img/arte.jpg' }
     ];
 
     const configNiveles = [
-      { nivel: 1, cantidad: 4, gridClase: 'grid-2x2' },
-      { nivel: 2, cantidad: 6, gridClase: 'grid-3x2' },
-      { nivel: 3, cantidad: 8, gridClase: 'grid-4x2' }
+      { nivel: 1, cantidad: 4, tiempoMemoria: 10, gridClase: 'grid-2x2' },
+      { nivel: 2, cantidad: 6, tiempoMemoria: 10, gridClase: 'grid-3x2' },
+      { nivel: 3, cantidad: 6, tiempoMemoria: 6,  gridClase: 'grid-3x2' }
     ];
 
     let nivelActualIndex = 0;
@@ -372,11 +384,11 @@
     let slotDestinoDetectado = null;
     let dragCardWidth = 0, dragCardHeight = 0;
 
-    window.cacheHowies = [];
+    window.cacheImagenes = [];
     elementosPool.forEach(item => {
       const img = new Image();
       img.src = item.img;
-      window.cacheHowies.push(img);
+      window.cacheImagenes.push(img);
     });
 
     function irAlInicio() {
@@ -389,9 +401,16 @@
       iniciarNivel(nivelActualIndex);
     }
 
-    function pasarSiguienteNivel() {
-      nivelActualIndex++;
-      iniciarNivel(nivelActualIndex);
+    // Al tocar "Siguiente nivel" decide si va a advertencia o directo
+    function avanzarDesdeNivelSuperado() {
+      if (nivelActualIndex === 1) {
+        // Viene de ganar Nivel 2 -> Mostrar advertencia de Nivel 3
+        document.querySelectorAll('.pantalla-overlay').forEach(p => p.classList.add('oculto'));
+        document.getElementById('pantalla-advertencia-n3').classList.remove('oculto');
+      } else {
+        nivelActualIndex++;
+        iniciarNivel(nivelActualIndex);
+      }
     }
 
     function iniciarNivel(index) {
@@ -401,7 +420,7 @@
 
       const config = configNiveles[nivelActualIndex];
       document.getElementById('nivel-badge').innerText = `Nivel ${nivelActualIndex + 1} / 3`;
-      document.getElementById('instruccion').innerText = '¡Memorizá el orden de los Howies!';
+      document.getElementById('instruccion').innerText = '¡Memorizá el orden de las tarjetas!';
 
       const barajados = [...elementosPool].sort(() => Math.random() - 0.5);
       secuenciaOriginal = barajados.slice(0, config.cantidad);
@@ -417,7 +436,7 @@
       zonaDispersion.innerHTML = '';
       zonaDispersion.className = `lvl-${nivelActualIndex}`;
 
-      tiempoRestante = 10;
+      tiempoRestante = config.tiempoMemoria;
       document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
 
       secuenciaOriginal.forEach((item, i) => {
@@ -440,7 +459,7 @@
     function ejecutarFaseDispersion() {
       tiempoRestante = 20;
       document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
-      document.getElementById('instruccion').innerText = 'Arrastrá cada Howie a su casilla original';
+      document.getElementById('instruccion').innerText = 'Arrastrá cada tarjeta a su casilla original';
 
       const zonaCentral = document.getElementById('zona-central');
       const zonaDispersion = document.getElementById('zona-dispersion');
@@ -459,8 +478,7 @@
         if (tiempoRestante <= 0) {
           clearInterval(timerInterval);
           document.querySelectorAll('.tarjeta').forEach(c => c.onpointerdown = null);
-          document.getElementById('texto-casi').innerText = '¡Se acabó el tiempo! Estuviste muy cerca.';
-          document.getElementById('pantalla-casi').classList.remove('oculto');
+          mostrarPantallaDerrota('¡Se acabó el tiempo! Estuviste muy cerca.');
         }
       }, 1000);
     }
@@ -478,7 +496,7 @@
       card.className = 'tarjeta';
       card.dataset.id = item.id;
       card.innerHTML = `
-        <img src="${item.img}" alt="Howie ${item.nombre}">
+        <img src="${item.img}" alt="${item.nombre}">
         <div class="nombre">${item.nombre}</div>
       `;
       return card;
@@ -625,14 +643,33 @@
                 document.getElementById('pantalla-nivel-superado').classList.remove('oculto');
               }
             } else {
-              document.getElementById('texto-casi').innerText = 'El orden no era el correcto. ¡Volvé a intentarlo!';
-              document.getElementById('pantalla-casi').classList.remove('oculto');
+              mostrarPantallaDerrota('El orden no era el correcto.');
             }
           }, 1000);
         }
       }
 
       validarSiguiente();
+    }
+
+    function mostrarPantallaDerrota(mensaje) {
+      document.getElementById('texto-casi').innerText = mensaje;
+      
+      const btnReintentar = document.getElementById('btn-reintentar');
+      const btnInicioPrincipal = document.getElementById('btn-inicio-principal');
+      const linkInicioSecundario = document.getElementById('link-inicio-secundario');
+
+      if (nivelActualIndex === 2) {
+        btnReintentar.classList.remove('oculto');
+        btnInicioPrincipal.classList.add('oculto');
+        linkInicioSecundario.classList.remove('oculto');
+      } else {
+        btnReintentar.classList.add('oculto');
+        btnInicioPrincipal.classList.remove('oculto');
+        linkInicioSecundario.classList.add('oculto');
+      }
+
+      document.getElementById('pantalla-casi').classList.remove('oculto');
     }
   </script>
 </body>
