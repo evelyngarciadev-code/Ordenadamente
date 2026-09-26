@@ -253,19 +253,45 @@
       text-align: center;
       padding: 20px;
       z-index: 2000;
-      gap: 12px;
+      gap: 10px;
     }
     .oculto { display: none !important; }
 
-    h1 { font-size: 22px; color: #fff; }
-    p { font-size: 13px; color: #ddd; max-width: 300px; line-height: 1.3; }
+    /* Imágenes Temáticas de Pantallas */
+    .img-pantalla {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      margin-bottom: 2px;
+      border-radius: 12px;
+    }
+
+    /* Título Principal Llamativo */
+    .titulo-principal {
+      font-size: 32px;
+      color: #f1c40f;
+      text-transform: uppercase;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-shadow: 0 3px 10px rgba(0,0,0,0.6);
+      margin-bottom: 4px;
+    }
+
+    h1 { font-size: 24px; color: #fff; }
+    
+    p.instruccion-inicio {
+      font-size: 15px;
+      color: #e0e0e0;
+      max-width: 320px;
+      line-height: 1.45;
+    }
 
     .btn {
       background: #F57C00;
       color: white;
       border: none;
-      padding: 12px 24px;
-      font-size: 14px;
+      padding: 12px 26px;
+      font-size: 15px;
       font-weight: bold;
       border-radius: 25px;
       cursor: pointer;
@@ -297,7 +323,7 @@
   <!-- Marcador -->
   <div id="header">
     <div class="badge" id="nivel-badge">Nivel 1 / 3</div>
-    <div class="badge" id="timer-badge">⏱️ 10s</div>
+    <div class="badge" id="timer-badge">10s</div>
   </div>
 
   <div id="instruccion">¡Memorizá el orden de las tarjetas!</div>
@@ -310,67 +336,70 @@
 
   <!-- 1. PANTALLA INICIO -->
   <div id="pantalla-inicio" class="pantalla-overlay">
-    <h1>🦉 Ordenadamente - Howie</h1>
-    <p>Memorizá el orden de las tarjetas antes de que acabe el tiempo. Luego acomodalas en su casillero original.</p>
-    <button class="btn" onclick="iniciarNivel(0)">Comenzar juego</button>
+    <img src="img/hola.jpg" class="img-pantalla" alt="Hola">
+    <h1 class="titulo-principal">ORDENADAMENTE</h1>
+    <p class="instruccion-inicio">
+      Memorizá el orden de las tarjetas <b>antes de que acabe el tiempo</b>. Luego acomodalas en su casillero original.
+    </p>
+    <button class="btn" onclick="iniciarConPantallaCompleta(0)">Comenzar juego</button>
   </div>
 
   <!-- 2. PANTALLA NIVEL SUPERADO -->
   <div id="pantalla-nivel-superado" class="pantalla-overlay oculto">
-    <h1 style="color: #2ecc71;">¡Excelente! 🎉</h1>
+    <img src="img/win.jpg" class="img-pantalla" alt="Ganaste">
+    <h1 style="color: #2ecc71;">¡Excelente!</h1>
     <p>¡Ordenaste las tarjetas correctamente!</p>
     <button class="btn" onclick="avanzarDesdeNivelSuperado()">Siguiente nivel</button>
   </div>
 
-  <!-- NUEVA: PANTALLA ADVERTENCIA NIVEL 3 -->
+  <!-- 3. PANTALLA ADVERTENCIA NIVEL 3 -->
   <div id="pantalla-advertencia-n3" class="pantalla-overlay oculto">
-    <h1 style="color: #f1c40f;">⚠️ ¡Atención!</h1>
+    <img src="img/atencion.jpg" class="img-pantalla" alt="Atención">
+    <h1 style="color: #f1c40f;">¡Atención!</h1>
     <p style="font-size: 15px; color: #fff;">Ahora hay <b>menos tiempo</b> para memorizar...</p>
-    <p style="font-size: 13px; color: #f57c00; font-weight: bold;">¡Tenés solo 6 segundos!</p>
+    <p style="font-size: 14px; color: #f57c00; font-weight: bold;">¡Tenés solo 6 segundos!</p>
     <button class="btn" onclick="iniciarNivel(2)">¡Entendido, jugar!</button>
   </div>
 
-  <!-- 3. PANTALLA CASI / ERROR -->
+  <!-- 4. PANTALLA CASI / ERROR -->
   <div id="pantalla-casi" class="pantalla-overlay oculto">
-    <h1 style="color: #e74c3c;">Haaa... ¡casi! 🙈</h1>
+    <img src="img/error.jpg" class="img-pantalla" alt="Error">
+    <h1 style="color: #e74c3c;">Haaa... ¡casi!</h1>
     <p id="texto-casi">El orden no era el correcto.</p>
     
-    <!-- Botón condicional para nivel 3 -->
     <button id="btn-reintentar" class="btn oculto" onclick="reintentarNivel()">Volver a intentar</button>
-    
-    <!-- Botón condicional para niveles 1 y 2 -->
     <button id="btn-inicio-principal" class="btn" onclick="irAlInicio()">Volver al inicio</button>
-    
-    <!-- Link inferior visible solo en nivel 3 -->
     <span id="link-inicio-secundario" class="btn-link-inicio oculto" onclick="irAlInicio()">Ir al inicio</span>
   </div>
 
-  <!-- 4. PANTALLA FINAL GANASTE -->
+  <!-- 5. PANTALLA FINAL GANASTE -->
   <div id="pantalla-final" class="pantalla-overlay oculto">
-    <h1 style="color: #2ecc71;">¡COMPLETASTE TODO! 🏆</h1>
+    <img src="img/win.jpg" class="img-pantalla" alt="Ganador">
+    <h1 style="color: #2ecc71;">¡COMPLETASTE TODO!</h1>
     <div class="card-premio">
-      <h2 style="color: #f1c40f; font-size: 18px; margin-bottom: 6px;">🎁 ¡PREMIO DESBLOQUEADO!</h2>
-      <p style="color: #fff; font-size: 13px;">Reclamá tu premio en el stand mostrando esta pantalla.</p>
+      <h2 style="color: #f1c40f; font-size: 18px; margin-bottom: 6px;">¡PREMIO DESBLOQUEADO!</h2>
+      <p style="color: #fff; font-size: 13px;">Reclamá tu premio en el stand mostrando esta pantalla[cite: 1].</p>
     </div>
     <button class="btn" onclick="irAlInicio()">Ir al inicio</button>
   </div>
 
   <script>
     const elementosPool = [
-      { id: 'pile', nombre: 'Pile', img: './img/pile.jpg' },
-      { id: 'arco', nombre: 'Arco', img: './img/arco.jpg' },
-      { id: 'bici', nombre: 'Bici', img: './img/bici.jpg' },
-      { id: 'aqua', nombre: 'Aqua', img: './img/aqua.jpg' },
-      { id: 'kayak', nombre: 'Kayak', img: './img/kayak.jpg' },
-      { id: 'spa', nombre: 'Spa', img: './img/spa.jpg' },
-      { id: 'resto', nombre: 'Restó', img: './img/resto.jpg' },
-      { id: 'arte', nombre: 'Arte', img: './img/arte.jpg' }
+      { id: 'pile', nombre: 'Pile', img: 'img/pile.jpg' },
+      { id: 'arco', nombre: 'Arco', img: 'img/arco.jpg' },
+      { id: 'bici', nombre: 'Bici', img: 'img/bici.jpg' },
+      { id: 'aqua', nombre: 'Aqua', img: 'img/aqua.jpg' },
+      { id: 'kayak', nombre: 'Kayak', img: 'img/kayak.jpg' },
+      { id: 'spa', nombre: 'Spa', img: 'img/spa.jpg' },
+      { id: 'resto', nombre: 'Restó', img: 'img/resto.jpg' },
+      { id: 'arte', nombre: 'Arte', img: 'img/arte.jpg' }
     ];
 
+    // Nivel 3: 6s de memoria y 25s para acomodar
     const configNiveles = [
-      { nivel: 1, cantidad: 4, tiempoMemoria: 10, gridClase: 'grid-2x2' },
-      { nivel: 2, cantidad: 6, tiempoMemoria: 10, gridClase: 'grid-3x2' },
-      { nivel: 3, cantidad: 6, tiempoMemoria: 6,  gridClase: 'grid-3x2' }
+      { nivel: 1, cantidad: 4, tiempoMemoria: 10, tiempoAcomodar: 20, gridClase: 'grid-2x2' },
+      { nivel: 2, cantidad: 6, tiempoMemoria: 10, tiempoAcomodar: 20, gridClase: 'grid-3x2' },
+      { nivel: 3, cantidad: 6, tiempoMemoria: 6,  tiempoAcomodar: 25, gridClase: 'grid-3x2' }
     ];
 
     let nivelActualIndex = 0;
@@ -384,12 +413,22 @@
     let slotDestinoDetectado = null;
     let dragCardWidth = 0, dragCardHeight = 0;
 
-    window.cacheImagenes = [];
-    elementosPool.forEach(item => {
-      const img = new Image();
-      img.src = item.img;
-      window.cacheImagenes.push(img);
-    });
+    // Activar Pantalla Completa
+    function activarPantallaCompleta() {
+      const docEl = document.documentElement;
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      } else if (docEl.msRequestFullscreen) {
+        docEl.msRequestFullscreen();
+      }
+    }
+
+    function iniciarConPantallaCompleta(nivel) {
+      activarPantallaCompleta();
+      iniciarNivel(nivel);
+    }
 
     function irAlInicio() {
       clearInterval(timerInterval);
@@ -401,10 +440,8 @@
       iniciarNivel(nivelActualIndex);
     }
 
-    // Al tocar "Siguiente nivel" decide si va a advertencia o directo
     function avanzarDesdeNivelSuperado() {
       if (nivelActualIndex === 1) {
-        // Viene de ganar Nivel 2 -> Mostrar advertencia de Nivel 3
         document.querySelectorAll('.pantalla-overlay').forEach(p => p.classList.add('oculto'));
         document.getElementById('pantalla-advertencia-n3').classList.remove('oculto');
       } else {
@@ -437,7 +474,7 @@
       zonaDispersion.className = `lvl-${nivelActualIndex}`;
 
       tiempoRestante = config.tiempoMemoria;
-      document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
+      document.getElementById('timer-badge').innerText = `${tiempoRestante}s`;
 
       secuenciaOriginal.forEach((item, i) => {
         const slot = crearSlot(i);
@@ -448,17 +485,17 @@
 
       timerInterval = setInterval(() => {
         tiempoRestante--;
-        document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
+        document.getElementById('timer-badge').innerText = `${tiempoRestante}s`;
         if (tiempoRestante <= 0) {
           clearInterval(timerInterval);
-          ejecutarFaseDispersion();
+          ejecutarFaseDispersion(config);
         }
       }, 1000);
     }
 
-    function ejecutarFaseDispersion() {
-      tiempoRestante = 20;
-      document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
+    function ejecutarFaseDispersion(config) {
+      tiempoRestante = config.tiempoAcomodar;
+      document.getElementById('timer-badge').innerText = `${tiempoRestante}s`;
       document.getElementById('instruccion').innerText = 'Arrastrá cada tarjeta a su casilla original';
 
       const zonaCentral = document.getElementById('zona-central');
@@ -474,7 +511,7 @@
 
       timerInterval = setInterval(() => {
         tiempoRestante--;
-        document.getElementById('timer-badge').innerText = `⏱️ ${tiempoRestante}s`;
+        document.getElementById('timer-badge').innerText = `${tiempoRestante}s`;
         if (tiempoRestante <= 0) {
           clearInterval(timerInterval);
           document.querySelectorAll('.tarjeta').forEach(c => c.onpointerdown = null);
